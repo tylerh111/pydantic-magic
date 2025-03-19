@@ -20,14 +20,14 @@ def _magic_dict_assign(
     path: list[str],
     value: Any,
     *,
-    default_factor: Callable[[], dict] = dict,
+    default_factory: Callable[[], dict] = dict,
 ):
     if len(path) == 0:
         raise ValueError("magic placement must have a path")
 
     d_curr = data
     for key in itertools.islice(path, len(path) - 1):
-        d_curr = d_curr.setdefault(key, default_factor())
+        d_curr = d_curr.setdefault(key, default_factory())
 
     d_curr[path[-1]] = value
 
@@ -40,7 +40,7 @@ def _magic_with_cache(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
-    default_factor: Callable[[], dict] = dict,
+    default_factory: Callable[[], dict] = dict,
 ) -> dict[str, Any]:
     prefix = prefix or []
 
@@ -61,7 +61,7 @@ def _magic_with_cache(
             cache,
             path,
             val,
-            default_factor=default_factor,
+            default_factory=default_factory,
         )
 
         _magic_with_cache(
@@ -81,7 +81,7 @@ def magic(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
-    default_factor: Callable[[], dict] = dict,
+    default_factory: Callable[[], dict] = dict,
 ) -> dict[str, Any]:
     return _magic_with_cache(
         __d,
@@ -89,7 +89,7 @@ def magic(
         prefix=prefix,
         sep=sep,
         maxsplit=maxsplit,
-        default_factor=default_factor,
+        default_factory=default_factory,
     )
 
 
