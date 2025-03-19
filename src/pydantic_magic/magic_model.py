@@ -15,24 +15,41 @@ __all__ = [
 ]
 
 
-def _magic_dict_assign(
-    data: dict[str, Any],
-    path: list[str],
-    value: Any,
-    *,
-    default_factory: Callable[[], dict] = dict,
+def _list_setdefault(data: list[Any], n: int, default: Any, miss: Any = None) -> Any:
+    if n < len(data) and data[n] is not miss:
+        return data[n]
+
+    for _ in range(len(data), n+1):
+        data.append(miss)
+
+    data[n] = default
+    return data[n]
+
+
+def _magic_assign(
+    data: dict[str, Any] | list[Any],
+    path: list[str | int],
+    val: Any,
 ):
     if len(path) == 0:
         raise ValueError("magic placement must have a path")
 
-    d_curr = data
-    for key in itertools.islice(path, len(path) - 1):
-        d_curr = d_curr.setdefault(key, default_factory())
+    # if not isinstance(path[0], str):
+    #     raise TypeError("magic placement must start with a key, not an index")
 
-    d_curr[path[-1]] = value
+    _next_container = lambda k: {} if isinstance(k, str) else []
+
+    curr = data
+    for key, keynext in itertools.pairwise(path):
+        if isinstance(curr, dict):
+            curr = curr.setdefault(key, _next_container(keynext))
+        else:
+            curr = _list_setdefault(curr, key, _next_container(keynext))
+
+    curr[keynext] = val
 
 
-def _magic_with_cache(
+def _magic_rec(
     __d: Any,
     /,
     *,
@@ -40,7 +57,6 @@ def _magic_with_cache(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
-    default_factory: Callable[[], dict] = dict,
 ) -> dict[str, Any]:
     prefix = prefix or []
 
@@ -57,14 +73,18 @@ def _magic_with_cache(
             *key.split(sep=sep, maxsplit=maxsplit),
         ]
 
-        _magic_dict_assign(
+        path = [
+            int(key) if key.isdigit() else key
+            for key in path
+        ]
+
+        _magic_assign(
             cache,
             path,
             val,
-            default_factory=default_factory,
         )
 
-        _magic_with_cache(
+        _magic_rec(
             val,
             cache=cache,
             prefix=path,
@@ -81,16 +101,19 @@ def magic(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
-    default_factory: Callable[[], dict] = dict,
 ) -> dict[str, Any]:
-    return _magic_with_cache(
+    prefix = prefix or []
+    prefix = ["_", *prefix]
+
+    res = _magic_rec(
         __d,
         cache={},
         prefix=prefix,
         sep=sep,
         maxsplit=maxsplit,
-        default_factory=default_factory,
     )
+
+    return res["_"]
 
 
 class MagicModel(BaseModel):
