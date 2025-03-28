@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from types import NoneType
 from typing import Any, Annotated, ClassVar, Union, get_args, get_origin
 
 from pydantic import RootModel
@@ -37,13 +38,22 @@ def pydantic_variant(
             if inspect.isabstract(cls):
                 return super(cls).__init_subclass__(*args, **kwargs)
 
+            # get variant keeps non-subclasse types from entering the variant
+            # initially, the variant is None (or annotated None) which is removed initially
+            # relies on union of one type collapse to that type
+            # relies on union of unions to collapse to a single, flat union type
+            def get_variant(alternatives):
+                if alternatives and alternatives is not NoneType:
+                    return Union[cls, alternatives]
+                return Union[cls]
+
             if get_origin(__cls.model_variant) is Annotated:
                 alternatives = get_args(__cls.model_variant)[0]
-                variant = Union[cls, alternatives]
+                variant = get_variant(alternatives)
                 __cls.model_variant = Annotated[(variant, *annotations)]
             else:
                 alternatives = get_args(__cls.model_variant)
-                variant = Union[cls, alternatives]
+                variant = get_variant(alternatives)
                 __cls.model_variant = variant
 
             return super(cls).__init_subclass__(*args, **kwargs)
