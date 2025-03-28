@@ -102,15 +102,17 @@ class Apple(BaseModel):
 class Orange(BaseModel):
     name: Literal["orange"] = "orange"
 
-# must be declared after all types are created
-Fruit = Annotated[Apple | Orange, Field(discriminator="name")]
+# must know all types before declaration
+Fruit = Annotated[
+    Apple | Orange,
+    Field(discriminator="name"),
+]
 
-# cannot add class `Cherry` to `Fruit` after declaration
+# cannot create `Cherry` class and have
+# it participate in `Fruit` union
 
-# assert isinstance(Fruit(name="apple"), Apple)
-#> TypeError: 'types.UnionType' object is not callable
-# assert isinstance(Fruit(name="orange"), Orange)
-#> TypeError: 'types.UnionType' object is not callable
+# assert Fruit(name="apple")  #> TypeError
+# assert Fruit(name="orange")  #> TypeError
 assert Apple().name == "apple"
 assert Orange().name == "orange"
 ```
@@ -310,10 +312,10 @@ class Circle(Shape):
 #> ValidationError: Unable to extract tag using discriminator 'type'
 
 # Shape(type="unknown")
-#> ValidationError: Discriminator 'type' does not match any of the expected tags: 'circle', 'square', 'rectangle', 'polygon'
+#> ValidationError: Discriminator 'unknown' does not match any expected tags: 'circle', 'square', 'rectangle'
 
 # Shape(type="polygon")
-#> TypeError: Can't instantiate abstract class Polygon without an implementation for abstract methods 'area', 'perimeter'
+#> ValidationError: Discriminator 'polygon' does not match any expected tags: 'circle', 'square', 'rectangle'
 
 # Shape(type="rectangle")
 #> ValidationError: Missing `rectangle.length` and `rectangle.width`
