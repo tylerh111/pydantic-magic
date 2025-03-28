@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from typing import Any, Annotated, ClassVar, Union, get_args, get_origin
 
 from pydantic import RootModel
@@ -31,6 +32,10 @@ def pydantic_variant(
 
         @classmethod
         def pydantic_variant_init_subclass(cls, *args, **kwargs):
+
+            # ignore abstract classes as they cannot be instantiated anyways
+            if inspect.isabstract(cls):
+                return super(cls).__init_subclass__(*args, **kwargs)
 
             if get_origin(__cls.model_variant) is Annotated:
                 alternatives = get_args(__cls.model_variant)[0]
