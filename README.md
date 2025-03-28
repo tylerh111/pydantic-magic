@@ -18,7 +18,7 @@ This class is wonderful for deeply nested classes.
 table, th, td {padding: 1px;}
 </style>
 
-<table class="table">
+<table>
 <tr>
 <th> Using <code>pydantic.BaseModel</code> </th>
 <th> Using <code>pydantic_magic.MagicNotationModel</code> </th>
