@@ -10,15 +10,15 @@
 [Pydantic Magic](https://pydantic-magic.readthedocs.io) is a collection of _magical_ utilities for [Pydantic](https://docs.pydantic.dev).
 
 
-### **`pydantic_magic.MagicUnderscoreModel`**
+### **`pydantic_magic.MagicNotationModel`**
 
-`pydantic_magic.MagicUnderscoreModel` is a wrapper that allows users to instantiate [Pydantic](https://docs.pydantic.dev) models via "magic" underscore syntax (as used by [Plotly](https://plotly.com/python/creating-and-updating-figures/#magic-underscore-notation)).
+`pydantic_magic.MagicNotationModel` is a wrapper that allows users to instantiate [Pydantic](https://docs.pydantic.dev) models via "magic" underscore syntax (as used by [Plotly](https://plotly.com/python/creating-and-updating-figures/#magic-underscore-notation)).
 
 
 <table>
 <tr>
 <th> Using <code>pydantic.BaseModel</code> </th>
-<th> Using <code>pydantic_magic.MagicUnderscoreModel</code> </th>
+<th> Using <code>pydantic_magic.MagicNotationModel</code> </th>
 </tr>
 <tr>
 <td>
@@ -51,13 +51,13 @@ assert box.font.size == "12pt"
 <td>
 
 ```python
-from pydantic_magic import MagicUnderscoreModel
+from pydantic_magic import MagicNotationModel
 
-class Font(MagicUnderscoreModel):
+class Font(MagicNotationModel):
     name: str
     size: str
 
-class TextBox(MagicUnderscoreModel):
+class TextBox(MagicNotationModel):
     text: str
     font: Font
 
@@ -91,19 +91,19 @@ pip install pydantic-magic
 
 ## Usage
 
-#### **`MagicUnderscoreModel`**
+#### **`MagicNotationModel`**
 
-Pydantic Magic provides the `MagicUnderscoreModel` class that can replace `pydantic.BaseModel`.
+Pydantic Magic provides the `MagicNotationModel` class that can replace `pydantic.BaseModel`.
 Both standard validation and "magic" validation available.
 
 ```python
-from pydantic_magic import MagicUnderscoreModel
+from pydantic_magic import MagicNotationModel
 
-class Font(MagicUnderscoreModel):
+class Font(MagicNotationModel):
     name: str
     size: str
 
-class TextBox(MagicUnderscoreModel):
+class TextBox(MagicNotationModel):
     text: str
     font: Font
 
@@ -115,18 +115,18 @@ box = TextBox.model_validate({
 ```
 
 > [!WARNING]
-> `MagicModel` recursively and aggressively splits on `"_"`.
+> `MagicNotationModel` recursively and aggressively splits on `"_"`.
 > Thus, it currently cannot handle fields that have underscores in the name.
 >
-> The following will not work with `MagicModel`.
+> The following will not work with `MagicNotationModel`.
 
 ```python
-from pydantic_magic import MagicModel
+from pydantic_magic import MagicNotationModel
 
-class Inner(MagicModel):
+class Inner(MagicNotationModel):
     my_field: int
 
-class Outter(MagicModel):
+class Outter(MagicNotationModel):
     my_inner: Inner
 
 my_outter = Outter.model_validate({
@@ -140,7 +140,7 @@ my_outter = Outter.model_validate({
 
 #### **`magic`**
 
-Under the hood, the `MagicModel` uses a function called `magic`.
+Under the hood, the `MagicNotationModel` uses a function called `magic`.
 It is the code that expands a dictionary of keys separated by an underscore into many dictionaries and lists.
 The function could be useful for other applications and so it is exported from `pydantic_magic`.
 

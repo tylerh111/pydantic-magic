@@ -1,4 +1,4 @@
-"""Defines the Magic Underscore Pydantic Model."""
+"""Defines the Magic Notation Pydantic Model."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from pydantic import BaseModel, model_validator
 
 
 __all__ = [
-    "MagicModel",
-    "magic",
+    "MagicNotationModel",
+    "magic_notation",
 ]
 
 
@@ -26,7 +26,7 @@ def _list_setdefault(data: list[Any], n: int, default: Any, miss: Any = None) ->
     return data[n]
 
 
-def _magic_assign(
+def _magic_notation_assign(
     data: dict[str, Any] | list[Any],
     path: list[str | int],
     val: Any,
@@ -49,7 +49,7 @@ def _magic_assign(
     curr[keynext] = val
 
 
-def _magic_rec(
+def _magic_notation_rec(
     __d: Any,
     /,
     *,
@@ -78,13 +78,13 @@ def _magic_rec(
             for key in path
         ]
 
-        _magic_assign(
+        _magic_notation_assign(
             cache,
             path,
             val,
         )
 
-        _magic_rec(
+        _magic_notation_rec(
             val,
             cache=cache,
             prefix=path,
@@ -94,7 +94,7 @@ def _magic_rec(
     return cache
 
 
-def magic(
+def magic_notation(
     __d: dict[str, Any],
     /,
     *,
@@ -105,7 +105,7 @@ def magic(
     prefix = prefix or []
     prefix = ["_", *prefix]
 
-    res = _magic_rec(
+    res = _magic_notation_rec(
         __d,
         cache={},
         prefix=prefix,
@@ -116,7 +116,7 @@ def magic(
     return res["_"]
 
 
-class MagicUnderscoreModel(BaseModel):
+class MagicNotationModel(BaseModel):
     """Magic Underscore Pydantic Model.
 
     Allows model validation via magic underscore syntax.
@@ -126,4 +126,4 @@ class MagicUnderscoreModel(BaseModel):
     @classmethod
     def magic_model_validator(cls, v: Any):
         print(f"::DEBUG:: {cls} | {type(v)} | {v}")
-        return magic(v)
+        return magic_notation(v)

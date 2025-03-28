@@ -1,4 +1,4 @@
-"""Pydantic validation for Magic Underscore Syntax."""
+"""Magical Utilities for Pydantic."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ except ImportError:
 
 
 __all__ = [
-    "MagicModel",
-    "magic",
+    "MagicNotationModel",
+    "magic_notation",
+    "pydantic_variant",
 ]
 
 
-from .magic_model import MagicModel, magic
+from .magic_notation_model import MagicNotationModel, magic_notation
+from .variant_decorator import pydantic_variant
