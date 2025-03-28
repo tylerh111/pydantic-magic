@@ -14,6 +14,10 @@
 `pydantic_magic.MagicNotationModel` is a wrapper that allows users to instantiate Pydantic models via "magic" underscore notation (as used by [Plotly](https://plotly.com/python/creating-and-updating-figures/#magic-underscore-notation)).
 This class is wonderful for deeply nested classes.
 
+<style>
+table, th, td {padding: 1px;}
+</style>
+
 <table>
 <tr>
 <th> Using <code>pydantic.BaseModel</code> </th>
