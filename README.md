@@ -10,15 +10,15 @@
 [Pydantic Magic](https://pydantic-magic.readthedocs.io) is a collection of _magical_ utilities for [Pydantic](https://docs.pydantic.dev).
 
 
-### **`pydantic_magic.MagicModel`**
+### **`pydantic_magic.MagicUnderscoreModel`**
 
-`pydantic_magic.MagicModel` is a wrapper that allows users to instantiate [Pydantic](https://docs.pydantic.dev) models via "magic" underscore syntax (as used by [Plotly](https://plotly.com/python/creating-and-updating-figures/#magic-underscore-notation)).
+`pydantic_magic.MagicUnderscoreModel` is a wrapper that allows users to instantiate [Pydantic](https://docs.pydantic.dev) models via "magic" underscore syntax (as used by [Plotly](https://plotly.com/python/creating-and-updating-figures/#magic-underscore-notation)).
 
 
 <table>
 <tr>
 <th> Using <code>pydantic.BaseModel</code> </th>
-<th> Using <code>pydantic_magic.MagicModel</code> </th>
+<th> Using <code>pydantic_magic.MagicUnderscoreModel</code> </th>
 </tr>
 <tr>
 <td>
@@ -51,13 +51,13 @@ assert box.font.size == "12pt"
 <td>
 
 ```python
-from pydantic_magic import MagicModel
+from pydantic_magic import MagicUnderscoreModel
 
-class Font(MagicModel):
+class Font(MagicUnderscoreModel):
     name: str
     size: str
 
-class TextBox(MagicModel):
+class TextBox(MagicUnderscoreModel):
     text: str
     font: Font
 
@@ -91,19 +91,19 @@ pip install pydantic-magic
 
 ## Usage
 
-#### **`MagicModel`**
+#### **`MagicUnderscoreModel`**
 
-Pydantic Magic provides the `MagicModel` class that can replace `pydantic.BaseModel`.
+Pydantic Magic provides the `MagicUnderscoreModel` class that can replace `pydantic.BaseModel`.
 Both standard validation and "magic" validation available.
 
 ```python
-from pydantic import BaseModel
+from pydantic_magic import MagicUnderscoreModel
 
-class Font(BaseModel):
+class Font(MagicUnderscoreModel):
     name: str
     size: str
 
-class TextBox(BaseModel):
+class TextBox(MagicUnderscoreModel):
     text: str
     font: Font
 

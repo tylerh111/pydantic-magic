@@ -1,4 +1,4 @@
-"""Defines the Pydantic `pint.Quantity`."""
+"""Defines the Magic Underscore Pydantic Model."""
 
 from __future__ import annotations
 
@@ -116,8 +116,8 @@ def magic(
     return res["_"]
 
 
-class MagicModel(BaseModel):
-    """Magic Pydantic Model.
+class MagicUnderscoreModel(BaseModel):
+    """Magic Underscore Pydantic Model.
 
     Allows model validation via magic underscore syntax.
     """
