@@ -33,6 +33,9 @@ def pydantic_variant(
 
         @classmethod
         def pydantic_variant_init_subclass(cls, *args, **kwargs):
+            print("================================================")
+            print(f"pydantic_variant_init_subclass: {cls} | {args} | {kwargs}")
+            # print(f"pydantic_variant_init_subclass: {__cls.model_variant}")
 
             # ignore abstract classes as they cannot be instantiated anyways
             if inspect.isabstract(cls):
@@ -49,13 +52,18 @@ def pydantic_variant(
 
             if get_origin(__cls.model_variant) is Annotated:
                 alternatives = get_args(__cls.model_variant)[0]
+                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {alternatives}")
                 variant = get_variant(alternatives)
+                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {variant}")
                 __cls.model_variant = Annotated[(variant, *annotations)]
             else:
                 alternatives = get_args(__cls.model_variant)
+                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {alternatives}")
                 variant = get_variant(alternatives)
+                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {variant}")
                 __cls.model_variant = variant
 
+            # print(f"pydantic_variant_init_subclass: {__cls.model_variant}")
             return super(cls).__init_subclass__(*args, **kwargs)
 
         __cls.__annotations__ = {"model_variant": ClassVar}
