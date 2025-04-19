@@ -108,6 +108,7 @@ Fruit = Annotated[
     Field(discriminator="name"),
 ]
 
+
 # cannot create `Cherry` class and have
 # it participate in `Fruit` union
 
@@ -248,8 +249,10 @@ This class is able to instantiate any of the concrete subclasses.
 
 ```python
 import math
+from abc import abstractmethod
+from typing import Any, Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from pydantic_magic import pydantic_variant
 
 @pydantic_variant(annotations=Field(discriminator="type"))
@@ -259,23 +262,21 @@ class Shape(BaseModel):
     @abstractmethod
     def area(self) -> float: ...
 
-    @abstractmethod
-    def perimeter(self) -> float: ...
-
 class Polygon(Shape):
     type: Literal["polygon"] = "polygon"
+    sides: int
 
-class Rectangle(Polygon):
+class Quadralateral(Polygon):
+    type: Literal["quadralateral"] = "quadralateral"
+    sides: Literal[4] = 4
+
+class Rectangle(Quadralateral):
     type: Literal["rectangle"] = "rectangle"
-
     length: float
     width: float
 
     def area(self) -> float:
         return self.length * self.width
-
-    def perimeter(self) -> float:
-        return 2 * self.length + 2 * self.width
 
 class Square(Rectangle):
     type: Literal["square"] = "square"
@@ -299,14 +300,11 @@ class Square(Rectangle):
 
 class Circle(Shape):
     type: Literal["circle"] = "circle"
-
     radius: float
 
     def area(self) -> float:
         return math.pi * self.radius**2
 
-    def perimeter(self) -> float:
-        return 2 * math.pi * self.radius
 
 # Shape()
 #> ValidationError: Unable to extract tag using discriminator 'type'
@@ -328,7 +326,6 @@ assert isinstance(rectangle, Rectangle)
 assert not isinstance(rectangle, Square)
 assert not isinstance(rectangle, Circle)
 assert rectangle.area() == 2.0
-assert rectangle.perimeter() == 6.0
 
 square = Shape(type="square", length=1.0)
 assert type(square) is Square
@@ -338,7 +335,6 @@ assert isinstance(square, Rectangle)
 assert isinstance(square, Square)
 assert not isinstance(square, Circle)
 assert square.area() == 1.0
-assert square.perimeter() == 2.0
 
 circle = Shape(type="circle", radius=1.0)
 assert type(circle) is Circle
@@ -348,7 +344,6 @@ assert not isinstance(circle, Rectangle)
 assert not isinstance(circle, Square)
 assert isinstance(circle, Circle)
 assert round(circle.area(), 2) == 3.14
-assert round(circle.perimeter(), 2) == 6.28
 ```
 
 > [!WARNING]

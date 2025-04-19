@@ -87,7 +87,13 @@ def pydantic_variant(
 
             return super(cls).__init_subclass__(*args, **kwargs)
 
-        __cls.__annotations__ = {"model_variant": ClassVar}
+        # !!!WARNING!!!
+        # overriding `__annotations__`, `__new__` and `__init_subclass__`
+        # the decorator must override the instantiation methods to inject the new variant code
+        # a possible fix for this is to call the original methods
+        # however the original `__new__` and `__init_subclass` lose meaning at the abstract level
+        # temporary solution is to decorate a more abstract class instead
+        __cls.__annotations__["model_variant"] = ClassVar
         __cls.__new__ = pydantic_variant_new
         __cls.__init_subclass__ = pydantic_variant_init_subclass
 
