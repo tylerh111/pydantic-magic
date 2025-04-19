@@ -40,11 +40,11 @@ def magic_variant(
     discriminator = next((a for a in annotations if isinstance(a, FieldInfo)), None)
     discriminator = discriminator.discriminator if discriminator is not None else None
     if isinstance(discriminator, Discriminator):
-        raise TypeError("pydantic_variant: functional discriminators are not supported")
+        raise TypeError("magic_variant: functional discriminators are not supported")
 
     def inject(__cls: type[BaseModel]):
 
-        def pydantic_variant_new(cls: type[BaseModel], *args, **kwargs):
+        def magic_variant_new(cls: type[BaseModel], *args, **kwargs):
             # use root model to instantiate the variant (union or annotated union)
             # alternatively, construct the super class of `cls` which will eventually hit the base class
             # the recursive base case is when it reach the abstract base model
@@ -53,11 +53,11 @@ def magic_variant(
             return super(__cls, cls).__new__(cls, *args, **kwargs)
 
         @classmethod
-        def pydantic_variant_init_subclass(cls: type[BaseModel], *args, **kwargs):
+        def magic_variant_init_subclass(cls: type[BaseModel], *args, **kwargs):
 
             # ignore abstract classes as they cannot be instantiated anyways
             if inspect.isabstract(cls):
-                logging.debug(f"pydantic_variant: skipping {cls} - class is abstract")
+                logging.debug(f"magic_variant: skipping {cls} - class is abstract")
                 return super(cls).__init_subclass__(*args, **kwargs)
 
             # ignore classes that do not have the discriminator field
@@ -66,10 +66,10 @@ def magic_variant(
                 discriminator is not None
                 and get_origin(cls.__annotations__.get(discriminator)) is not Literal
             ):
-                logging.debug(f"pydantic_variant: skipping {cls} - class has no discriminator field")
+                logging.debug(f"magic_variant: skipping {cls} - class has no discriminator field")
                 return super(cls).__init_subclass__(*args, **kwargs)
 
-            logging.debug(f"pydantic_variant: registering new class for {__cls} - {cls}")
+            logging.debug(f"magic_variant: registering new class for {__cls} - {cls}")
 
             # class is approved for participation in the model variant
             # most of this code is ensuring class is added to the model variant correctly
@@ -94,8 +94,8 @@ def magic_variant(
         # however the original `__new__` and `__init_subclass` lose meaning at the abstract level
         # temporary solution is to decorate a more abstract class instead
         __cls.__annotations__["model_variant"] = ClassVar
-        __cls.__new__ = pydantic_variant_new
-        __cls.__init_subclass__ = pydantic_variant_init_subclass
+        __cls.__new__ = magic_variant_new
+        __cls.__init_subclass__ = magic_variant_init_subclass
 
         # note, this decorator cannot instantiate the base class, so it must be abstract
         # this is due to need root model to validate the variant in the base case
