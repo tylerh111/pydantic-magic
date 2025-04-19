@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import itertools
-from numbers import Number
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping, Callable
+from typing import Any
 
 from pydantic import BaseModel, model_validator
 
@@ -32,21 +31,34 @@ def _magic_notation_assign(
     val: Any,
 ):
     if len(path) == 0:
-        raise ValueError("magic placement must have a path")
+        raise ValueError("magic_notation: magic placement must have a path")
 
-    # if not isinstance(path[0], str):
-    #     raise TypeError("magic placement must start with a key, not an index")
+    # ensure the last path has `None` so the for loop works completely
+    # note, the path always starts with `_` from `magic_notation`
+    # because of this, `data` is always a dict
+    path = [*path, None]
 
+    # iterate over the path and create a dict or list depending on the next key
+    # if `keynext` is a string, a new dictionary is created
+    # if `keynext` is an int, a new list is create
+    # `curr` is the container (dict / list) at each point in the path
+    # `prev` will be the end container by the end (due to the extra `None` at the end of the path)
+    # note, if a value (dict or list) is already in placed, then it is skipped
     _next_container = lambda k: {} if isinstance(k, str) else []
-
     curr = data
     for key, keynext in itertools.pairwise(path):
+        prev = curr
         if isinstance(curr, dict):
             curr = curr.setdefault(key, _next_container(keynext))
-        else:
+        elif isinstance(curr, list):
             curr = _list_setdefault(curr, key, _next_container(keynext))
+        else:
+            raise ValueError(f"magic_notation: path has unexpected value type: {type(curr)}")
 
-    curr[keynext] = val
+    if not isinstance(prev, (dict, list)):
+        raise ValueError(f"magic_notation: value already as a value: {path[1:-1]} = {val}")
+
+    prev[key] = val
 
 
 def _magic_notation_rec(
@@ -113,7 +125,7 @@ def magic_notation(
         maxsplit=maxsplit,
     )
 
-    return res["_"]
+    return res.get("_", res)
 
 
 class MagicNotationModel(BaseModel):
