@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from types import NoneType
-from typing import Any, Annotated, ClassVar, Union, get_args, get_origin
+from typing import Any, Annotated, ClassVar, Literal, Union, get_args, get_origin
 
-from pydantic import RootModel
+from pydantic import RootModel, BaseModel, Discriminator
+from pydantic.fields import FieldInfo
 
 
 __all__ = [
@@ -12,8 +14,18 @@ __all__ = [
 ]
 
 
+def variant_new_item_prepend(cls, alternatives):
+    # get variant keeps non-subclasse types from entering the variant
+    # initially, the variant is None (or annotated None) which is removed initially
+    # relies on union of one type collapse to that type
+    # relies on union of unions to collapse to a single, flat union type
+    if alternatives and alternatives is not NoneType:
+        return Union[cls, alternatives]
+    return Union[cls]
+
+
 def pydantic_variant(
-    __cls = None,
+    __cls: type[BaseModel] | None = None,
     /,
     annotations: list | Any | None = None,
 ) -> type | function:
@@ -21,9 +33,18 @@ def pydantic_variant(
     annotations = annotations if annotations is not None else []
     annotations = annotations if isinstance(annotations, list) else [annotations]
 
-    def inject(__cls):
+    # find discriminator field in the annotation
+    # classes that do not have the discriminator field will be considered "abstract"
+    # only considering static discriminators (no `pydantic.Discriminator`)
+    # also only considering first annotation that is a `pydantic.fields.FieldInfo`
+    discriminator = next((a for a in annotations if isinstance(a, FieldInfo)), None)
+    discriminator = discriminator.discriminator if discriminator is not None else None
+    if isinstance(discriminator, Discriminator):
+        raise TypeError("pydantic_variant: functional discriminators are not supported")
 
-        def pydantic_variant_new(cls, *args, **kwargs):
+    def inject(__cls: type[BaseModel]):
+
+        def pydantic_variant_new(cls: type[BaseModel], *args, **kwargs):
             # use root model to instantiate the variant (union or annotated union)
             # alternatively, construct the super class of `cls` which will eventually hit the base class
             # the recursive base case is when it reach the abstract base model
@@ -32,38 +53,38 @@ def pydantic_variant(
             return super(__cls, cls).__new__(cls, *args, **kwargs)
 
         @classmethod
-        def pydantic_variant_init_subclass(cls, *args, **kwargs):
-            print("================================================")
-            print(f"pydantic_variant_init_subclass: {cls} | {args} | {kwargs}")
-            # print(f"pydantic_variant_init_subclass: {__cls.model_variant}")
+        def pydantic_variant_init_subclass(cls: type[BaseModel], *args, **kwargs):
 
             # ignore abstract classes as they cannot be instantiated anyways
             if inspect.isabstract(cls):
+                logging.debug(f"pydantic_variant: skipping {cls} - class is abstract")
                 return super(cls).__init_subclass__(*args, **kwargs)
 
-            # get variant keeps non-subclasse types from entering the variant
-            # initially, the variant is None (or annotated None) which is removed initially
-            # relies on union of one type collapse to that type
-            # relies on union of unions to collapse to a single, flat union type
-            def get_variant(alternatives):
-                if alternatives and alternatives is not NoneType:
-                    return Union[cls, alternatives]
-                return Union[cls]
+            # ignore classes that do not have the discriminator field
+            # note, this check is skipped when no discriminator is provided
+            if (
+                discriminator is not None
+                and get_origin(cls.__annotations__.get(discriminator)) is not Literal
+            ):
+                logging.debug(f"pydantic_variant: skipping {cls} - class has no discriminator field")
+                return super(cls).__init_subclass__(*args, **kwargs)
 
+            logging.debug(f"pydantic_variant: registering new class for {__cls} - {cls}")
+
+            # class is approved for participation in the model variant
+            # most of this code is ensuring class is added to the model variant correctly
             if get_origin(__cls.model_variant) is Annotated:
                 alternatives = get_args(__cls.model_variant)[0]
-                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {alternatives}")
-                variant = get_variant(alternatives)
-                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {variant}")
+                variant = variant_new_item_prepend(cls, alternatives)
                 __cls.model_variant = Annotated[(variant, *annotations)]
+            elif get_origin(__cls.model_variant) is Union:
+                variant = variant_new_item_prepend(cls, __cls.model_variant)
+                __cls.model_variant = variant
             else:
-                alternatives = get_args(__cls.model_variant)
-                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {alternatives}")
-                variant = get_variant(alternatives)
-                print(f"::DEBUG:: {__cls.model_variant} / {cls} / {variant}")
+                alternatives = __cls.model_variant
+                variant = variant_new_item_prepend(cls, alternatives)
                 __cls.model_variant = variant
 
-            # print(f"pydantic_variant_init_subclass: {__cls.model_variant}")
             return super(cls).__init_subclass__(*args, **kwargs)
 
         __cls.__annotations__ = {"model_variant": ClassVar}
