@@ -10,12 +10,12 @@ from pydantic.fields import FieldInfo
 
 
 __all__ = [
-    "pydantic_variant",
+    "magic_variant",
 ]
 
 
-def variant_new_item_prepend(cls, alternatives):
-    # get variant keeps non-subclasse types from entering the variant
+def _variant_prepend_new_type(cls, alternatives):
+    # keep non-subclass types from entering the variant
     # initially, the variant is None (or annotated None) which is removed initially
     # relies on union of one type collapse to that type
     # relies on union of unions to collapse to a single, flat union type
@@ -24,7 +24,7 @@ def variant_new_item_prepend(cls, alternatives):
     return Union[cls]
 
 
-def pydantic_variant(
+def magic_variant(
     __cls: type[BaseModel] | None = None,
     /,
     annotations: list | Any | None = None,
@@ -75,14 +75,14 @@ def pydantic_variant(
             # most of this code is ensuring class is added to the model variant correctly
             if get_origin(__cls.model_variant) is Annotated:
                 alternatives = get_args(__cls.model_variant)[0]
-                variant = variant_new_item_prepend(cls, alternatives)
+                variant = _variant_prepend_new_type(cls, alternatives)
                 __cls.model_variant = Annotated[(variant, *annotations)]
             elif get_origin(__cls.model_variant) is Union:
-                variant = variant_new_item_prepend(cls, __cls.model_variant)
+                variant = _variant_prepend_new_type(cls, __cls.model_variant)
                 __cls.model_variant = variant
             else:
                 alternatives = __cls.model_variant
-                variant = variant_new_item_prepend(cls, alternatives)
+                variant = _variant_prepend_new_type(cls, alternatives)
                 __cls.model_variant = variant
 
             return super(cls).__init_subclass__(*args, **kwargs)

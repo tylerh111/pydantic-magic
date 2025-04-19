@@ -11,9 +11,9 @@ except ImportError:
 __all__ = [
     "MagicNotationModel",
     "magic_notation",
-    "pydantic_variant",
+    "magic_variant",
 ]
 
 
-from .magic_notation_model import MagicNotationModel, magic_notation
-from .variant_decorator import pydantic_variant
+from ._magic_notation import MagicNotationModel, magic_notation
+from ._magic_variant import magic_variant
