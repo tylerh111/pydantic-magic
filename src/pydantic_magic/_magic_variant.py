@@ -1,3 +1,5 @@
+"""The magic variant decorator for creating abstract union classes."""
+
 from __future__ import annotations
 
 import inspect
@@ -29,6 +31,35 @@ def magic_variant(
     /,
     annotations: list | Any | None = None,
 ) -> BaseModel | function:
+    """Magically decorate an pydantic model to make it an abstract union class.
+
+    An abstract union class is a design pattern where the abstract base class
+    can instantiate any of its concrete derived members. Derived classes that
+    are abstract or do not have a discriminator (if one is specified), it will
+    be ignored.
+
+    The union that contains the alternatives for the abstract union class are
+    stored in the class variable `model_variant`. If annotations are provided,
+    it will be of type `Annotated` instead of `Union`. If there is only one
+    concrete derived class, then it will that type (with annotations). If there
+    are no concrete derived classes, then it will be `None` (or annotated `None`).
+
+    There are a few limitations with the current implementation.
+
+    * The `pydantic.Discriminator` annotation is not supported.
+    * The decorator redefines `__new__` and `__init_subclasses__`.
+
+    Args:
+        __cls: The class to inject with magic variant functions. Defaults to None.
+        annotations: Annotations to include on the union base type.
+            it is recommended to use discriminators. Defaults to None.
+
+    Raises:
+        TypeError: Annotations contain a functional discriminator.
+
+    Returns:
+        type | function: The Pydantic abstract union class.
+    """
 
     annotations = annotations if annotations is not None else []
     annotations = annotations if isinstance(annotations, list) else [annotations]
@@ -46,8 +77,8 @@ def magic_variant(
 
         def magic_variant_new(cls: type[BaseModel], *args, **kwargs):
             # use root model to instantiate the variant (union or annotated union)
-            # alternatively, construct the super class of `cls` which will eventually hit the base class
-            # the recursive base case is when it reach the abstract base model
+            # alternatively, recursive call the super class constructo of `cls`
+            # the recursive base case is when it reach the abstract union class constructor
             if cls is __cls:
                 return RootModel[__cls.model_variant](*args, **kwargs).root
             return super(__cls, cls).__new__(cls, *args, **kwargs)
@@ -88,10 +119,10 @@ def magic_variant(
             return super(cls).__init_subclass__(*args, **kwargs)
 
         # !!!WARNING!!!
-        # overriding `__annotations__`, `__new__` and `__init_subclass__`
+        # overriding `__new__` and `__init_subclass__`
         # the decorator must override the instantiation methods to inject the new variant code
         # a possible fix for this is to call the original methods
-        # however the original `__new__` and `__init_subclass` lose meaning at the abstract level
+        # however, a custom `__new__` and `__init_subclass__` loses meaning at the abstract level
         # temporary solution is to decorate a more abstract class instead
         __cls.__annotations__["model_variant"] = ClassVar
         __cls.__new__ = magic_variant_new

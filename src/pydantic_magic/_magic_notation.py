@@ -1,4 +1,4 @@
-"""Defines the Magic Notation Pydantic Model."""
+"""The magic notation for pydantic models."""
 
 from __future__ import annotations
 
@@ -126,6 +126,38 @@ def magic_notation(
     maxsplit: int = -1,
     missing: Any = None,
 ) -> dict[str, Any]:
+    """Magically expand a flat dictionary into a nested dictionary.
+
+    The magic notation (inspired by [plotly](https://plotly.com/) magic underscores)
+    expands a flat dictionary of keys separated by some token (e.g. underscores)
+    into a nested dictionary. Complex dictionaries become very simple to read when
+    in a flatten form.
+
+    The input dict / list acts a tree, where each node is a new dict or list. A path
+    is formed from the top level down to the leaf (the actual value). The keys
+    represent the edges between nodes.
+
+    There are few limitations with the current implementation:
+
+    * The input must be a dictionary.
+    * The keys must be strings and indices must be int. No other type is allows.
+    * Virtual containers, e.g. `Mapping` or `Sequence` from `collections.abc, are not
+        supported, as they are not technically `dict` or `list`.
+    * Sets and frozen sets are not supported as replacements for lists.
+
+    Args:
+        __d: The dictionary to expand.
+        prefix: A prefix path instead of keys specified at the top level.
+            Defaults to `None`.
+        sep: Separator between keys (used by `str.split`).
+            Defaults to "_".
+        maxsplit: Max number of splits; in other words, the depth of the tree
+            (used by `str.split`). Defaults to `-1`.
+        missing: A filler for missing values in lists. Defaults to `None`.
+
+    Returns:
+        The magically expanded dictionary.
+    """
     prefix = prefix or []
     prefix = ["", *prefix]
 
@@ -145,11 +177,22 @@ class MagicNotationModel(BaseModel):
     """Magic Underscore Pydantic Model.
 
     Allows model validation via magic underscore syntax.
+    See [`magic_notation`] for more information.
+    The magic notation is called
     """
 
     @model_validator(mode="before")
     @classmethod
     def magic_model_validator(cls, v: Any):
+        """Validate a dictionary with magic notation.
+
+        Args:
+            v: The value with which to instantiate model.
+                Magic notation is only applied if it is of type `dict`.
+
+        Returns:
+            The value ready to continue with validation.
+        """
         if isinstance(v, dict):
             return magic_notation(v)
         return v
