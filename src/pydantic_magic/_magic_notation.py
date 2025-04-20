@@ -127,7 +127,7 @@ def magic_notation(
     missing: Any = None,
 ) -> dict[str, Any]:
     prefix = prefix or []
-    prefix = ["_", *prefix]
+    prefix = ["", *prefix]
 
     res = _magic_notation_rec(
         __d,
@@ -138,7 +138,7 @@ def magic_notation(
         missing=missing,
     )
 
-    return res.get("_", res)
+    return res.get("", res)
 
 
 class MagicNotationModel(BaseModel):
@@ -150,5 +150,6 @@ class MagicNotationModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def magic_model_validator(cls, v: Any):
-        print(f"::DEBUG:: {cls} | {type(v)} | {v}")
-        return magic_notation(v)
+        if isinstance(v, dict):
+            return magic_notation(v)
+        return v
