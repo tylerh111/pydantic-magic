@@ -3,9 +3,20 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
+
+if TYPE_CHECKING:
+    from typing import Any
+    from pydantic import ModelWrapValidatorHandler
+
+    try:
+        from typing import Self
+    except ImportError:
+        from typing_extensions import Self
+
+
 
 
 __all__ = [
@@ -181,9 +192,13 @@ class MagicNotationModel(BaseModel):
     See [`magic_notation`][pydantic_magic.magic_notation] for more information.
     """
 
-    @model_validator(mode="before")
+    @model_validator(mode="wrap")
     @classmethod
-    def magic_model_validator(cls, v: Any) -> Any:
+    def magic_model_validator(
+        cls,
+        v: Any,
+        handler: ModelWrapValidatorHandler[Self],
+    ) -> Self:
         """Validate a dictionary with magic notation.
 
         Args:
@@ -194,5 +209,5 @@ class MagicNotationModel(BaseModel):
             The value ready to continue with validation.
         """
         if isinstance(v, dict):
-            return magic_notation(v)
-        return v
+            v = magic_notation(v)
+        return handler(v)
