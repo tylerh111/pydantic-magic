@@ -148,13 +148,15 @@ def magic_notation(
     is formed from the top level down to the leaf (the actual value). The keys
     represent the edges between nodes.
 
-    There are few limitations with the current implementation:
+    !!! warning
 
-    * The input must be a dictionary.
-    * The keys must be strings and indices must be int. No other type is allows.
-    * Virtual containers, e.g. `Mapping` or `Sequence` from `collections.abc, are not
-        supported, as they are not technically `dict` or `list`.
-    * Sets and frozen sets are not supported as replacements for lists.
+        There are few limitations with the current implementation:
+
+        * The input must be a dictionary.
+        * The keys must be strings and indices must be int. No other type is allows.
+        * Virtual containers, e.g. `Mapping` or `Sequence` from `collections.abc, are not
+            supported, as they are not technically `dict` or `list`.
+        * Sets and frozen sets are not supported as replacements for lists.
 
     Args:
         __d: The dictionary to expand.
@@ -190,6 +192,18 @@ class MagicNotationModel(BaseModel):
     Allows model validation via magic underscore syntax.
     The magic notation is used in the validator for the model.
     See [`magic_notation`][pydantic_magic.magic_notation] for more information.
+
+    !!! warning
+
+        There are few limitations with the current implementation:
+
+        * Magic notation expands all dictionaries, including dictionaries meant as fields.
+            To be clear, a model that has a field of type `dict`, then that field will
+            also be expanded out since `magic_notation` does not have field information.
+        * Wrap validators will not be run in the correct order. Specifically, this class
+            uses the "wrap" validator to prevent "before" validators from running out of
+            order. See [ordering of validators](https://docs.pydantic.dev/latest/concepts/validators/#ordering-of-validators)
+            for more information.
     """
 
     @model_validator(mode="wrap")

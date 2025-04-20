@@ -1,5 +1,10 @@
 # Magic Notation
 
+!!! warning
+
+    These are experimental utilities.
+    See the warnings in [`magic_notation`][pydantic_magic.magic_notation].
+
 ### **`MagicNotationModel`**
 
 Pydantic Magic provides the `MagicNotationModel` class that can replace `pydantic.BaseModel`.

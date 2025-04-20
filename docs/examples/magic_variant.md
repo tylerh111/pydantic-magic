@@ -1,5 +1,10 @@
 # Magic Variant
 
+!!! warning
+
+    These are experimental utilities.
+    See the warnings in [`magic_variant`][pydantic_magic.magic_variant].
+
 An abstract union class is an abstract class that reference all subclasses.
 It itself cannot be instantiated, but it can instantiate any and all of its subclasses.
 Unlike unions, they can be used as a normal class.
@@ -113,3 +118,8 @@ assert round(circle.area(), 2) == 3.14
 !!! warning
     `magic_variant` overwrites the `__new__` and `__init_subclass__` special member functions.
     It is currently not designed to work with models that implement these methods.
+
+!!! warning
+    Currently, it is not possible to instantiate an abstract union class via `model_validate`.
+
+

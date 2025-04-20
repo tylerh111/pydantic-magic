@@ -44,10 +44,14 @@ def magic_variant(
     concrete derived class, then it will that type (with annotations). If there
     are no concrete derived classes, then it will be `None` (or annotated `None`).
 
-    There are a few limitations with the current implementation.
+    !!! warning
+        There are a few limitations with the current implementation.
 
-    * The `pydantic.Discriminator` annotation is not supported.
-    * The decorator redefines `__new__` and `__init_subclasses__`.
+        * The `pydantic.Discriminator` annotation is not supported.
+        * The decorator redefines `__new__` and `__init_subclasses__`.
+        * The base model cannot be instantiated with `model_validate`.
+        * Base classes that are not abstract nor discrimatory cannot be instantiated
+            as they do not themself participate in the variant.
 
     Args:
         __cls: The class to inject with magic variant functions. Defaults to None.
@@ -58,7 +62,7 @@ def magic_variant(
         TypeError: Annotations contain a functional discriminator.
 
     Returns:
-        type | function: The Pydantic abstract union class.
+        The Pydantic abstract union class.
     """
 
     annotations = annotations if annotations is not None else []
