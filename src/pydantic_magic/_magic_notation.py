@@ -177,13 +177,13 @@ class MagicNotationModel(BaseModel):
     """Magic Underscore Pydantic Model.
 
     Allows model validation via magic underscore syntax.
-    See [`magic_notation`] for more information.
-    The magic notation is called
+    The magic notation is used in the validator for the model.
+    See [`magic_notation`][pydantic_magic.magic_notation] for more information.
     """
 
     @model_validator(mode="before")
     @classmethod
-    def magic_model_validator(cls, v: Any):
+    def magic_model_validator(cls, v: Any) -> Any:
         """Validate a dictionary with magic notation.
 
         Args:

@@ -115,8 +115,8 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          import:
-            - https://docs.python.org/3.8/objects.inv
+          inventories:
+            - https://docs.python.org/3.10/objects.inv
             - https://docs.pydantic.dev/latest/objects.inv
           paths: [src]
           options:
@@ -205,7 +205,12 @@ markdown_extensions:
 nav:
   - Get Started:
     - Welcome: index.md
-    - Usage: usage.md
     - Changes: changes.md
     - Contributing: contributing.md
     - License: license.md
+  - API Documentation:
+    - Pydantic Magic:
+      - api/index.md
+  - Examples:
+      - Magic Notation: examples/magic_notation.md
+      - Magic Variant: examples/magic_variant.md
