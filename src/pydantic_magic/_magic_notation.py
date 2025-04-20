@@ -14,12 +14,18 @@ __all__ = [
 ]
 
 
-def _list_setdefault(data: list[Any], n: int, default: Any, miss: Any = None) -> Any:
-    if n < len(data) and data[n] is not miss:
+def _list_setdefault(
+    data: list[Any],
+    n: int,
+    default: Any,
+    *,
+    missing: Any = None,
+) -> Any:
+    if n < len(data) and data[n] is not missing:
         return data[n]
 
     for _ in range(len(data), n+1):
-        data.append(miss)
+        data.append(missing)
 
     data[n] = default
     return data[n]
@@ -29,6 +35,8 @@ def _magic_notation_assign(
     data: dict[str, Any] | list[Any],
     path: list[str | int],
     val: Any,
+    *,
+    missing: Any = None,
 ):
     if len(path) == 0:
         raise ValueError("magic_notation: magic placement must have a path")
@@ -51,7 +59,7 @@ def _magic_notation_assign(
         if isinstance(curr, dict):
             curr = curr.setdefault(key, _next_container(keynext))
         elif isinstance(curr, list):
-            curr = _list_setdefault(curr, key, _next_container(keynext))
+            curr = _list_setdefault(curr, key, _next_container(keynext), missing=missing)
         else:
             raise ValueError(f"magic_notation: path has unexpected value type: {type(curr)}")
 
@@ -69,6 +77,7 @@ def _magic_notation_rec(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
+    missing: Any = None,
 ) -> dict[str, Any]:
     prefix = prefix or []
 
@@ -94,6 +103,7 @@ def _magic_notation_rec(
             cache,
             path,
             val,
+            missing=missing,
         )
 
         _magic_notation_rec(
@@ -101,6 +111,7 @@ def _magic_notation_rec(
             cache=cache,
             prefix=path,
             sep=sep,
+            missing=missing,
         )
 
     return cache
@@ -113,6 +124,7 @@ def magic_notation(
     prefix: list[str] = None,
     sep: str = "_",
     maxsplit: int = -1,
+    missing: Any = None,
 ) -> dict[str, Any]:
     prefix = prefix or []
     prefix = ["_", *prefix]
@@ -123,6 +135,7 @@ def magic_notation(
         prefix=prefix,
         sep=sep,
         maxsplit=maxsplit,
+        missing=missing,
     )
 
     return res.get("_", res)
