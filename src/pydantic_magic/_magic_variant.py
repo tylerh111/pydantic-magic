@@ -28,7 +28,7 @@ def magic_variant(
     __cls: type[BaseModel] | None = None,
     /,
     annotations: list | Any | None = None,
-) -> type | function:
+) -> BaseModel | function:
 
     annotations = annotations if annotations is not None else []
     annotations = annotations if isinstance(annotations, list) else [annotations]
@@ -42,7 +42,7 @@ def magic_variant(
     if isinstance(discriminator, Discriminator):
         raise TypeError("magic_variant: functional discriminators are not supported")
 
-    def inject(__cls: type[BaseModel]):
+    def inject(__cls: type[BaseModel]) -> BaseModel:
 
         def magic_variant_new(cls: type[BaseModel], *args, **kwargs):
             # use root model to instantiate the variant (union or annotated union)
