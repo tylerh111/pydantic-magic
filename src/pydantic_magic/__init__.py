@@ -10,10 +10,12 @@ except ImportError:
 
 __all__ = [
     "MagicNotationModel",
+    "MagicBaseModel",
     "magic_notation",
     "magic_variant",
 ]
 
 
+from ._magic_base import MagicBaseModel, magic_discriminator
 from ._magic_notation import MagicNotationModel, magic_notation
 from ._magic_variant import magic_variant
